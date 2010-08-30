@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'autotest'
 
 class Autotest::Rubykoan < Autotest
@@ -8,17 +9,16 @@ class Autotest::Rubykoan < Autotest
     self.order = :alpha
     self.add_mapping(/^about_.*rb$/) do |filename, _|
       filename
-    end 
+    end
 
   end
 
   def make_test_cmd files_to_test
     "#{ruby}  'path_to_enlightenment.rb'"
-  end 
+  end
 
   # quiet test/unit chatter
   def handle_results(results)
   end
 
 end
-
