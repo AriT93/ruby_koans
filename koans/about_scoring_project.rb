@@ -7,7 +7,7 @@ require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 # A greed roll is scored as follows:
 #
 # * A set of three ones is 1000 points
-#
+#   
 # * A set of three numbers (other than ones) is worth 100 times the
 #   number. (e.g. three fives is 500 points).
 #
@@ -30,20 +30,7 @@ require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 # Your goal is to write the score method.
 
 def score(dice)
-  retval = 0
-  tally = Hash.new(0)
-  return 0 if dice.empty?
-  dice.each{ |r|
-    tally[r] += 1
-  }
-  tally.each{ |k,v|
-    case k
-      when 5 then v >= 3 ? retval += ((k * 100 ) + (v -3) * 50) : retval += v * 50
-      when 1 then v == 3 ? retval += 1000 : retval += v* 100
-      else v == 3 ? retval += k * 100 : 0
-    end
-  }
-  return retval
+  # You need to write this method
 end
 
 class AboutScoringAssignment < EdgeCase::Koan
