@@ -2,8 +2,29 @@ require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 
 class AboutIteration < EdgeCase::Koan
 
+  # -- An Aside ------------------------------------------------------
+  # Ruby 1.8 stores names as strings. Ruby 1.9 stores names as
+  # symbols. So we use a version dependent method "as_name" to convert
+  # to the right format in the koans.  We will use "as_name" whenever
+  # comparing to lists of methods.
+
+  in_ruby_version("1.8") do
+    def as_name(name)
+      name.to_s
+    end
+  end
+
+  in_ruby_version("1.9") do
+    def as_name(name)
+      name.to_sym
+    end
+  end
+
+  # Ok, now back to the Koans.
+  # -------------------------------------------------------------------
+
   def test_each_is_a_method_on_arrays
-    [].methods.include?("each")
+    assert_equal __(true), [].methods.include?(as_name(:each))
   end
 
   def test_iterating_with_each
@@ -12,7 +33,7 @@ class AboutIteration < EdgeCase::Koan
     array.each do |item|
       sum += item
     end
-    assert_equal 6, sum
+    assert_equal __(6), sum
   end
 
   def test_each_can_use_curly_brace_blocks_too
@@ -78,16 +99,26 @@ class AboutIteration < EdgeCase::Koan
     assert_equal __([11, 12, 13]), result
 
     # Files act like a collection of lines
-    file = File.open("example_file.txt")
-    upcase_lines = file.map { |line| line.strip.upcase }
-    assert_equal __(["THIS", "IS", "A", "TEST"]), upcase_lines
+    File.open("example_file.txt") do |file|
+      upcase_lines = file.map { |line| line.strip.upcase }
+      assert_equal __(["THIS", "IS", "A", "TEST"]), upcase_lines
+    end
 
     # NOTE: You can create your own collections that work with each,
     # map, select, etc.
-  ensure
-    # Arg, this is ugly.
-    # We will figure out how to fix this later.
-    file.close if file
   end
+
+  # Bonus Question:  In the previous koan, we saw the construct:
+  #
+  #   File.open(filename) do |file|
+  #     # code to read 'file'
+  #   end
+  #
+  # Why did we do it that way instead of the following?
+  #
+  #   file = File.open(filename)
+  #   # code to read 'file'
+  #
+  # When you get to the "AboutSandwichCode" koan, recheck your answer.
 
 end

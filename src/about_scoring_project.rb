@@ -1,13 +1,13 @@
 require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 
 # Greed is a dice game where you roll up to five dice to accumulate
-# points.  The following "score" function will be used calculate the
+# points.  The following "score" function will be used to calculate the
 # score of a single roll of the dice.
 #
 # A greed roll is scored as follows:
 #
 # * A set of three ones is 1000 points
-#   
+#
 # * A set of three numbers (other than ones) is worth 100 times the
 #   number. (e.g. three fives is 500 points).
 #
@@ -54,7 +54,7 @@ def score(dice)
   #++
 end
 
-class AboutScoringAssignment < EdgeCase::Koan
+class AboutScoringProject < EdgeCase::Koan
   def test_score_of_an_empty_list_is_zero
     assert_equal 0, score([])
   end

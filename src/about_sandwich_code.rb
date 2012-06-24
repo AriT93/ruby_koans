@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 
-class AboutUsingBlocks < EdgeCase::Koan
+class AboutSandwichCode < EdgeCase::Koan
 
   def count_lines(file_name)
     file = open(file_name)
@@ -40,7 +40,7 @@ class AboutUsingBlocks < EdgeCase::Koan
   #
   # Sandwich code is code that comes in three parts: (1) the top slice
   # of bread, (2) the meat, and (3) the bottom slice of bread.  The
-  # the bread part of the sandwich almost always goes together, but
+  # bread part of the sandwich almost always goes together, but
   # the meat part changes all the time.
   #
   # Because the changing part of the sandwich code is in the middle,
@@ -93,7 +93,7 @@ class AboutUsingBlocks < EdgeCase::Koan
   def test_finding_lines2
     assert_equal __("test\n"), find_line2("example_file.txt")
   end
-  
+
   # ------------------------------------------------------------------
 
   def count_lines3(file_name)

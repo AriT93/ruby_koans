@@ -2,7 +2,11 @@
 # -*- ruby -*-
 
 require 'rake/clean'
-require 'rake/rdoctask'
+begin
+  require 'rdoc/task'
+rescue LoadError => ex
+  # No rdoc task availble.
+end
 
 SRC_DIR      = 'src'
 PROB_DIR     = 'koans'
@@ -11,26 +15,33 @@ DIST_DIR     = 'dist'
 SRC_FILES = FileList["#{SRC_DIR}/*"]
 KOAN_FILES = SRC_FILES.pathmap("#{PROB_DIR}/%f")
 
-TAR_FILE = "#{DIST_DIR}/rubykoans.tgz"
-ZIP_FILE = "#{DIST_DIR}/rubykoans.zip"
+today    = Time.now.strftime("%Y-%m-%d")
+TAR_FILE = "#{DIST_DIR}/rubykoans-#{today}.tgz"
+ZIP_FILE = "#{DIST_DIR}/rubykoans-#{today}.zip"
 
+CLEAN.include("**/*.rbc")
 CLOBBER.include(DIST_DIR)
 
 module Koans
+  extend Rake::DSL if defined?(Rake::DSL)
+
+  # Remove solution info from source
+  #   __(a,b)     => __
+  #   _n_(number) => __
+  #   # __        =>
   def Koans.remove_solution(line)
     line = line.gsub(/\b____\([^\)]+\)/, "____")
     line = line.gsub(/\b___\([^\)]+\)/, "___")
     line = line.gsub(/\b__\([^\)]+\)/, "__")
     line = line.gsub(/\b_n_\([^\)]+\)/, "_n_")
     line = line.gsub(%r(/\#\{__\}/), "/__/")
+    line = line.gsub(/\s*#\s*__\s*$/, '')
     line
   end
 
   def Koans.make_koan_file(infile, outfile)
     if infile =~ /edgecase/
       cp infile, outfile
-    elsif infile =~ /autotest/
-      cp_r infile, outfile
     else
       open(infile) do |ins|
         open(outfile, "w") do |outs|
@@ -51,16 +62,39 @@ module Koans
   end
 end
 
+module RubyImpls
+  # Calculate the list of relevant Ruby implementations.
+  def self.find_ruby_impls
+    rubys = `rvm list`.gsub(/=>/,'').split(/\n/).map { |x| x.strip }.reject { |x| x.empty? || x =~ /^rvm/ }.sort
+    expected.map { |impl|
+      last = rubys.grep(Regexp.new(Regexp.quote(impl))).last
+      last ? last.split.first : nil
+    }.compact
+  end
+
+  # Return a (cached) list of relevant Ruby implementations.
+  def self.list
+    @list ||= find_ruby_impls
+  end
+
+  # List of expected ruby implementations.
+  def self.expected
+    %w(ruby-1.8.7 ruby-1.9.2 jruby ree)
+  end
+end
+
 task :default => :walk_the_path
 
 task :walk_the_path do
-  cd 'koans'
+  cd PROB_DIR
   ruby 'path_to_enlightenment.rb'
 end
 
-Rake::RDocTask.new do |rd|
-  rd.main = "README.rdoc"
-  rd.rdoc_files.include("README.rdoc", "koans/*.rb")
+if defined?(Rake::RDocTask)
+  Rake::RDocTask.new do |rd|
+    rd.main = "README.rdoc"
+    rd.rdoc_files.include("README.rdoc", "${PROB_DIR}/*.rb")
+  end
 end
 
 directory DIST_DIR
@@ -83,14 +117,6 @@ task :upload => [TAR_FILE, ZIP_FILE] do
   sh "scp #{ZIP_FILE} linode:sites/onestepback.org/download"
 end
 
-desc "Check that the require files match the about_* files"
-task :check do
-  about_files = Dir['src/about_*.rb'].size
-  about_requires = `grep require src/path_to_enlightenment.rb | wc -l`.to_i
-  puts "# of about files:    #{about_files}"
-  puts "# of about requires: #{about_requires}"
-end
-
 desc "Generate the Koans from the source files from scratch."
 task :regen => [:clobber_koans, :gen]
 
@@ -107,5 +133,40 @@ end
 SRC_FILES.each do |koan_src|
   file koan_src.pathmap("#{PROB_DIR}/%f") => [PROB_DIR, koan_src] do |t|
     Koans.make_koan_file koan_src, t.name
+  end
+end
+
+task :run do
+  puts 'koans'
+  Dir.chdir("${SRC_DIR}") do
+    puts "in #{Dir.pwd}"
+    sh "ruby path_to_enlightenment.rb"
+  end
+end
+
+
+desc "Pre-checkin tests (=> run_all)"
+task :cruise => :run_all
+
+desc "Run the completed koans againts a list of relevant Ruby Implementations"
+task :run_all do
+  results = []
+  RubyImpls.list.each do |impl|
+    puts "=" * 40
+    puts "On Ruby #{impl}"
+    sh ". rvm #{impl}; rake run"
+    results << [impl, "RAN"]
+    puts
+  end
+  puts "=" * 40
+  puts "Summary:"
+  puts
+  results.each do |impl, res|
+    puts "#{impl} => RAN"
+  end
+  puts
+  RubyImpls.expected.each do |requested_impl|
+    impl_pattern = Regexp.new(Regexp.quote(requested_impl))
+    puts "No Results for #{requested_impl}" unless results.detect { |x| x.first =~ impl_pattern }
   end
 end

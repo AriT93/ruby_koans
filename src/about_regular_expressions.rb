@@ -3,11 +3,11 @@ require File.expand_path(File.dirname(__FILE__) + '/edgecase')
 
 class AboutRegularExpressions < EdgeCase::Koan
   def test_a_pattern_is_a_regular_expression
-    assert_equal Regexp, /pattern/.class
+    assert_equal __(Regexp), /pattern/.class
   end
 
   def test_a_regexp_can_search_a_string_for_matching_content
-    assert_equal "match", "some matching content"[/match/]
+    assert_equal __("match"), "some matching content"[/match/]
   end
 
   def test_a_failed_match_returns_nil
@@ -84,6 +84,8 @@ class AboutRegularExpressions < EdgeCase::Koan
   def test_shortcut_character_classes_are_negated_with_capitals
     assert_equal __("the number is "), "the number is 42"[/\D+/]
     assert_equal __("space:"), "space: \t\n"[/\S+/]
+    # ... a programmer would most likely do
+    assert_equal __(" = "), "variable_1 = 42"[/[^a-zA-Z0-9_]+/]
     assert_equal __(" = "), "variable_1 = 42"[/\W+/]
   end
 
@@ -141,7 +143,7 @@ class AboutRegularExpressions < EdgeCase::Koan
 
   # THINK ABOUT IT:
   #
-  # Explain the difference between a character class ([…]) and alternation (|).
+  # Explain the difference between a character class ([...]) and alternation (|).
 
   # ------------------------------------------------------------------
 
